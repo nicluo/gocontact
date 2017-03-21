@@ -124,7 +124,7 @@ func run(ctx *cli.Context) error {
 		siteKey = ctx.String("site-key")
 	}
 
-	if err := http.ListenAndServe(":3000", nil); err != nil {
+	if err := http.ListenAndServe(fmt.Sprintf(":%d", ctx.Int("port")), nil); err != nil {
 		log.Fatal("failed to start server", err)
 	}
 
@@ -140,6 +140,12 @@ func main() {
 		cli.BoolTFlag{
 			Name:  "demo",
 			Usage: "show demo form for testing",
+		},
+		cli.IntFlag{
+			Name:   "port",
+			Usage:  "server port",
+			Value:  3000,
+			EnvVar: "PORT",
 		},
 		cli.StringFlag{
 			Name:   "site-key",
