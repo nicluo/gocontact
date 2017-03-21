@@ -13,6 +13,19 @@ import (
 	"github.com/urfave/cli"
 )
 
+type Form struct {
+	Name               string `schema:"name"`
+	Email              string `schema:"email"`
+	Subject            string `schema:"subject"`
+	Message            string `schema:"message"`
+	GRecaptchaResponse string `schema:"g-recaptcha-response"`
+}
+
+type SubmitResponse struct {
+	Success bool   `json:"success"`
+	Error   string `json:"error"`
+}
+
 // App Name and Version
 const (
 	AppName = "GoContact"
@@ -44,19 +57,6 @@ const (
 	</form>
 	</body></html>`
 )
-
-type Form struct {
-	Name               string `schema:"name"`
-	Email              string `schema:"email"`
-	Subject            string `schema:"subject"`
-	Message            string `schema:"message"`
-	GRecaptchaResponse string `schema:"g-recaptcha-response"`
-}
-
-type SubmitResponse struct {
-	Success bool   `json:"success"`
-	Error   string `json:"error"`
-}
 
 var decoder = schema.NewDecoder()
 
