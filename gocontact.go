@@ -1,11 +1,15 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
 
+	gocontact "bitbucket.org/nicluo/gocontact/src"
+
+	recaptcha "github.com/dpapathanasiou/go-recaptcha"
 	"github.com/gorilla/schema"
 	"github.com/urfave/cli"
 )
@@ -19,7 +23,7 @@ const (
 const (
 	page = `<!DOCTYPE HTML><html><body>
 	<script src='https://www.google.com/recaptcha/api.js'></script>
-	<form method="post">
+	<form method="post" action="submit">
 	<div>
   <label>Your Name (required)</label>
   <input type="text" name="name" required />
@@ -42,7 +46,7 @@ const (
 	</body></html>`
 )
 
-type Message struct {
+type Form struct {
 	Name               string `schema:"name"`
 	Email              string `schema:"email"`
 	Subject            string `schema:"subject"`
@@ -50,26 +54,61 @@ type Message struct {
 	GRecaptchaResponse string `schema:"g-recaptcha-response"`
 }
 
+type SubmitResponse struct {
+	Success bool   `json:"success"`
+	Error   string `json:"error"`
+}
+
 var decoder = schema.NewDecoder()
 
-func homePage(writer http.ResponseWriter, r *http.Request) {
-	err := r.ParseForm()
-	if err != nil {
-		log.Printf("error parsing form: %v\n", err)
-	}
-
-	var message Message
-	err = decoder.Decode(&message, r.PostForm)
-	if err != nil {
-		log.Printf("error decoding message: %v\n", err)
-	}
-
-	log.Println(message)
+func home(writer http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(writer, page)
 }
 
+func submit(writer http.ResponseWriter, r *http.Request) {
+	err := r.ParseForm()
+	if err != nil {
+		log.Printf("error parsing form: %v\n", err)
+		response, _ := json.Marshal(&SubmitResponse{Success: false, Error: "invalid-form"})
+		fmt.Fprint(writer, string(response))
+		return
+	}
+
+	var form Form
+	err = decoder.Decode(&form, r.PostForm)
+	if err != nil {
+		log.Printf("error decoding message: %v\n", err)
+		response, _ := json.Marshal(&SubmitResponse{Success: false, Error: "invalid-decoded-form"})
+		fmt.Fprint(writer, string(response))
+		return
+	}
+
+	ip, _ := gocontact.RequestIP(r)
+	result := recaptcha.Confirm(ip, form.GRecaptchaResponse)
+	log.Printf("reCAPTCHA: %v\n", result)
+
+	if !result {
+		response, _ := json.Marshal(&SubmitResponse{Success: false, Error: "recaptcha-failed"})
+		fmt.Fprint(writer, string(response))
+		return
+	}
+
+	err = gocontact.SendContactMail(form.Subject, form.Name, form.Email, form.Message)
+	if err != nil {
+		log.Printf("error sending mail: %v\n", err)
+		response, _ := json.Marshal(&SubmitResponse{Success: false, Error: "smtp-failed"})
+		fmt.Fprint(writer, string(response))
+	} else {
+		log.Println("smtp send successful")
+		response, _ := json.Marshal(&SubmitResponse{Success: true})
+		fmt.Fprint(writer, string(response))
+	}
+}
+
 func run(ctx *cli.Context) error {
-	http.HandleFunc("/", homePage)
+	http.HandleFunc("/", home)
+	http.HandleFunc("/submit", submit)
+
 	if err := http.ListenAndServe(":3000", nil); err != nil {
 		log.Fatal("failed to start server", err)
 	}
@@ -78,6 +117,9 @@ func run(ctx *cli.Context) error {
 }
 
 func main() {
+	recaptcha.Init("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
+	gocontact.InitMail("from@xxxxx.com", "", "localhost", 1025, "to@xxxxx.com")
+
 	app := cli.NewApp()
 	app.Name = AppName
 	app.Usage = "Go Contact Form Collector"
