@@ -32,6 +32,9 @@ func InitRecaptcha(privateKey string) {
 // response - g-recaptcha-response value in the submitted form
 func VerifyRecaptcha(remoteip, response string) bool {
 	r, _ := check(remoteip, response)
+	if !r.Success {
+		log.Println(r)
+	}
 	return r.Success
 }
 
