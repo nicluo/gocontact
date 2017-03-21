@@ -35,7 +35,7 @@ const (
 const (
 	page = `<!DOCTYPE HTML><html><body>
 	<script src='https://www.google.com/recaptcha/api.js'></script>
-	<form method="post" action="submit">
+	<form method="post" action="/">
 	<div>
 	<label>Your Name (required)</label>
 	<input type="text" name="name" required />
@@ -60,7 +60,7 @@ const (
 
 var decoder = schema.NewDecoder()
 
-func home(writer http.ResponseWriter, r *http.Request) {
+func demo(writer http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(writer, page)
 }
 
@@ -105,8 +105,8 @@ func submit(writer http.ResponseWriter, r *http.Request) {
 }
 
 func run(ctx *cli.Context) error {
-	http.HandleFunc("/", home)
-	http.HandleFunc("/submit", submit)
+	http.HandleFunc("/", submit)
+	http.HandleFunc("/demo", demo)
 
 	if err := http.ListenAndServe(":3000", nil); err != nil {
 		log.Fatal("failed to start server", err)
