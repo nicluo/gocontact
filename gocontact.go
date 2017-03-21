@@ -52,16 +52,17 @@ const (
 	<label>Message</label>
 	<textarea name="message" cols="40" rows="10"></textarea>
 	</div>
-	<div class="g-recaptcha" data-sitekey="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"></div>
+	<div class="g-recaptcha" data-sitekey="%s"></div>
 	<input type="submit" value="Send">
 	</form>
 	</body></html>`
 )
 
 var decoder = schema.NewDecoder()
+var siteKey string
 
 func demo(writer http.ResponseWriter, r *http.Request) {
-	fmt.Fprint(writer, page)
+	fmt.Fprintf(writer, page, siteKey)
 }
 
 func submit(writer http.ResponseWriter, r *http.Request) {
@@ -105,8 +106,14 @@ func submit(writer http.ResponseWriter, r *http.Request) {
 }
 
 func run(ctx *cli.Context) error {
+	gocontact.InitRecaptcha(ctx.String("private-key"))
+	gocontact.InitMail(ctx.String("smtp-sender"), ctx.String("smtp-password"), ctx.String("smtp-host"), ctx.Int("smtp-port"), ctx.String("smtp-sender"))
+
 	http.HandleFunc("/", submit)
-	http.HandleFunc("/demo", demo)
+	if ctx.BoolT("demo") {
+		http.HandleFunc("/demo", demo)
+		siteKey = ctx.String("site-key")
+	}
 
 	if err := http.ListenAndServe(":3000", nil); err != nil {
 		log.Fatal("failed to start server", err)
@@ -116,14 +123,48 @@ func run(ctx *cli.Context) error {
 }
 
 func main() {
-	gocontact.InitMail("from@xxxxx.com", "", "localhost", 1025, "to@xxxxx.com")
-	gocontact.InitRecaptcha("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
 
 	app := cli.NewApp()
 	app.Name = AppName
 	app.Usage = "Go Contact Form Collector"
 	app.Version = AppVer
-	app.Flags = append(app.Flags, []cli.Flag{}...)
+	app.Flags = append(app.Flags, []cli.Flag{
+		cli.BoolTFlag{
+			Name:  "demo",
+			Usage: "show demo form for testing",
+		},
+		cli.StringFlag{
+			Name:   "site-key",
+			Usage:  "site key for reCaptcha (only required for demo)",
+			EnvVar: "SITE_KEY",
+		},
+		cli.StringFlag{
+			Name:   "private-key",
+			Usage:  "private key for reCaptcha",
+			EnvVar: "PRIVATE_KEY",
+		},
+		cli.StringFlag{
+			Name:   "smtp-sender",
+			Usage:  "sender email",
+			EnvVar: "SMTP_SENDER",
+		},
+		cli.StringFlag{
+			Name:   "smtp-password",
+			Usage:  "sender password",
+			EnvVar: "SMTP_PASSWORD",
+		},
+		cli.StringFlag{
+			Name:   "smtp-host",
+			Usage:  "smtp host",
+			EnvVar: "SMTP_HOST",
+		},
+		cli.IntFlag{
+			Name:   "smtp-port",
+			Usage:  "smtp port",
+			Value:  587,
+			EnvVar: "SMTP_PORT",
+		},
+	}...)
 	app.Action = run
 	app.Run(os.Args)
 }
