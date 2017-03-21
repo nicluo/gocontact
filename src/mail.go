@@ -42,6 +42,6 @@ func formatBody(name string, email string, body string) string {
 }
 
 func formatMessage(subject string, body string) []byte {
-	message := fmt.Sprintf("From: %s\nTo: %s\n Subject: %s\n\n%s", m.sender, m.to, subject, body)
+	message := fmt.Sprintf("From: %s\nTo: %s\nSubject: %s\n\n%s", m.sender, m.to, subject, body)
 	return []byte(message)
 }
