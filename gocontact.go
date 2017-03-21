@@ -9,7 +9,6 @@ import (
 
 	gocontact "bitbucket.org/nicluo/gocontact/src"
 
-	recaptcha "github.com/dpapathanasiou/go-recaptcha"
 	"github.com/gorilla/schema"
 	"github.com/urfave/cli"
 )
@@ -84,7 +83,7 @@ func submit(writer http.ResponseWriter, r *http.Request) {
 	}
 
 	ip, _ := gocontact.RequestIP(r)
-	result := recaptcha.Confirm(ip, form.GRecaptchaResponse)
+	result := gocontact.VerifyRecaptcha(ip, form.GRecaptchaResponse)
 	log.Printf("reCAPTCHA: %v\n", result)
 
 	if !result {
@@ -117,8 +116,8 @@ func run(ctx *cli.Context) error {
 }
 
 func main() {
-	recaptcha.Init("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
 	gocontact.InitMail("from@xxxxx.com", "", "localhost", 1025, "to@xxxxx.com")
+	gocontact.InitRecaptcha("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
 
 	app := cli.NewApp()
 	app.Name = AppName
