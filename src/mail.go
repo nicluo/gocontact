@@ -22,20 +22,15 @@ func InitMail(sender string, password string, smtp string, port int, to string) 
 }
 
 // SendContactMail sends an email given subject and message body
-func SendContactMail(subject string, name string, email string, body string) error {
+func SendContactMail(subject string, name string, email string, body string) (err error) {
 	subject = formatSubject(subject)
 	body = formatBody(name, email, body)
 	msg := formatMessage(subject, body)
 
-	err := smtp.SendMail(fmt.Sprintf("%s:%d", m.smtp, m.port),
+	err = smtp.SendMail(fmt.Sprintf("%s:%d", m.smtp, m.port),
 		smtp.PlainAuth("", m.sender, m.password, m.smtp),
 		m.sender, []string{m.to}, []byte(msg))
-
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return
 }
 
 func formatSubject(subject string) string {
