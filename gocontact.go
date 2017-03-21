@@ -60,20 +60,12 @@ const (
 
 var decoder = schema.NewDecoder()
 var siteKey string
-var origin string
 
 func demo(writer http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(writer, page, siteKey)
 }
 
 func submit(writer http.ResponseWriter, r *http.Request) {
-	if r.Header.Get("Origin") == origin {
-		writer.Header().Set("Access-Control-Allow-Origin", origin)
-		writer.Header().Set("Access-Control-Allow-Methods", "POST")
-		writer.Header().Set("Access-Control-Allow-Headers",
-			"Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
-	}
-
 	err := r.ParseForm()
 	if err != nil {
 		log.Printf("error parsing form: %v\n", err)
@@ -116,7 +108,6 @@ func submit(writer http.ResponseWriter, r *http.Request) {
 func run(ctx *cli.Context) error {
 	gocontact.InitRecaptcha(ctx.String("private-key"))
 	gocontact.InitMail(ctx.String("smtp-sender"), ctx.String("smtp-password"), ctx.String("smtp-host"), ctx.Int("smtp-port"), ctx.String("smtp-to"))
-	origin = ctx.String("origin")
 
 	http.HandleFunc("/", submit)
 	if ctx.BoolT("demo") {
@@ -182,11 +173,6 @@ func main() {
 			Usage:  "smtp port",
 			Value:  587,
 			EnvVar: "SMTP_PORT",
-		},
-		cli.StringFlag{
-			Name:   "origin",
-			Usage:  "Allow Cors requests from custom origin",
-			EnvVar: "ORIGIN",
 		},
 	}...)
 	app.Action = run
