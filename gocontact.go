@@ -37,22 +37,22 @@ const (
 	<script src='https://www.google.com/recaptcha/api.js'></script>
 	<form method="post" action="submit">
 	<div>
-  <label>Your Name (required)</label>
-  <input type="text" name="name" required />
+	<label>Your Name (required)</label>
+	<input type="text" name="name" required />
 	</div>
 	<div>
 	<label>Your Email (required)</label>
-  <input type="email" name="email" required />
+	<input type="email" name="email" required />
 	</div>
 	<div>
-  <label>Subject</label>
-  <input type="text" name="subject" required />
+	<label>Subject</label>
+	<input type="text" name="subject" required />
 	</div>
 	<div>
 	<label>Message</label>
-  <textarea name="message" cols="40" rows="10"></textarea>
+	<textarea name="message" cols="40" rows="10"></textarea>
 	</div>
-  <div class="g-recaptcha" data-sitekey="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"></div>
+	<div class="g-recaptcha" data-sitekey="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"></div>
 	<input type="submit" value="Send">
 	</form>
 	</body></html>`
