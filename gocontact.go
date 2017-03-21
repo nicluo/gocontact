@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/gorilla/schema"
 	"github.com/urfave/cli"
 )
 
@@ -41,8 +42,29 @@ const (
 	</body></html>`
 )
 
-func homePage(writer http.ResponseWriter, request *http.Request) {
-	request.ParseForm()
+type Message struct {
+	Name               string `schema:"name"`
+	Email              string `schema:"email"`
+	Subject            string `schema:"subject"`
+	Message            string `schema:"message"`
+	GRecaptchaResponse string `schema:"g-recaptcha-response"`
+}
+
+var decoder = schema.NewDecoder()
+
+func homePage(writer http.ResponseWriter, r *http.Request) {
+	err := r.ParseForm()
+	if err != nil {
+		log.Printf("error parsing form: %v\n", err)
+	}
+
+	var message Message
+	err = decoder.Decode(&message, r.PostForm)
+	if err != nil {
+		log.Printf("error decoding message: %v\n", err)
+	}
+
+	log.Println(message)
 	fmt.Fprint(writer, page)
 }
 
