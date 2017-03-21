@@ -115,7 +115,7 @@ func submit(writer http.ResponseWriter, r *http.Request) {
 
 func run(ctx *cli.Context) error {
 	gocontact.InitRecaptcha(ctx.String("private-key"))
-	gocontact.InitMail(ctx.String("smtp-sender"), ctx.String("smtp-password"), ctx.String("smtp-host"), ctx.Int("smtp-port"), ctx.String("smtp-sender"))
+	gocontact.InitMail(ctx.String("smtp-sender"), ctx.String("smtp-password"), ctx.String("smtp-host"), ctx.Int("smtp-port"), ctx.String("smtp-to"))
 	origin = ctx.String("origin")
 
 	http.HandleFunc("/", submit)
@@ -132,7 +132,6 @@ func run(ctx *cli.Context) error {
 }
 
 func main() {
-
 	app := cli.NewApp()
 	app.Name = AppName
 	app.Usage = "Go Contact Form Collector"
@@ -156,6 +155,11 @@ func main() {
 			Name:   "smtp-sender",
 			Usage:  "sender email",
 			EnvVar: "SMTP_SENDER",
+		},
+		cli.StringFlag{
+			Name:   "smtp-to",
+			Usage:  "contact recipient email",
+			EnvVar: "SMTP_TO",
 		},
 		cli.StringFlag{
 			Name:   "smtp-password",
